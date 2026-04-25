@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VOXTEK OS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --cyan: #7ad7ff;
+  --blue: #2aa8ff;
+  --deep: #001b3a;
+  --bg: #00040a;
+  --glow-soft: 0 0 6px rgba(42,168,255,0.6), 0 0 14px rgba(42,168,255,0.25);
+  --glow: 0 0 10px rgba(42,168,255,0.7), 0 0 24px rgba(42,168,255,0.3);
+  --glow-strong: 0 0 14px rgba(42,168,255,0.8), 0 0 36px rgba(42,168,255,0.4), 0 0 70px rgba(42,168,255,0.15);
+  --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+html, body {
+  margin: 0;
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  color: var(--cyan);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.06) 2px,
+    rgba(0,0,0,0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ── BACKGROUND ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(0,200,255,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 75%, rgba(0,100,255,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(0,40,80,0.35) 0%, transparent 70%),
+    linear-gradient(135deg, #000812, #001528, #00040a);
+  z-index: -1;
+  animation: bgShift 20s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  0%   { background-position: 0% 0%; filter: hue-rotate(0deg); }
+  100% { background-position: 100% 100%; filter: hue-rotate(8deg); }
+}
+
+/* ── PARTICLES ── */
+#particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--blue);
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 4px var(--blue);
+  animation: particleDrift linear infinite;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes particleDrift {
+  0%   { transform: translate3d(0, 100vh, 0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.4; }
+  100% { transform: translate3d(40px, -10px, 0); opacity: 0; }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(42,168,255,0.6), 0 0 22px rgba(42,168,255,0.3); }
+  50%      { text-shadow: 0 0 14px rgba(42,168,255,0.85), 0 0 40px rgba(42,168,255,0.5), 0 0 70px rgba(42,168,255,0.2); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { box-shadow: 0 0 6px rgba(42,168,255,0.4), inset 0 0 6px rgba(42,168,255,0.08); }
+  50%      { box-shadow: 0 0 16px rgba(42,168,255,0.6), 0 0 30px rgba(42,168,255,0.2), inset 0 0 10px rgba(42,168,255,0.12); }
+}
+
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes bootStep {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes logoReveal {
+  0%   { letter-spacing: 18px; opacity: 0; filter: blur(6px); }
+  60%  { letter-spacing: 4px; opacity: 1; filter: blur(1px); }
+  100% { letter-spacing: 4px; opacity: 1; filter: blur(0); }
+}
+
+@keyframes tabSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── POLICY ── */
+#policy {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.82);
+  z-index: 999;
+  transition: opacity 0.5s var(--ease);
+  backdrop-filter: blur(6px);
+}
+
+/* ── LOGIN ── */
+#login, #boot {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+/* ── BOX ── */
+.box {
+  background: rgba(0,10,25,0.85);
+  padding: 36px 40px;
+  border: 1px solid var(--blue);
+  text-align: center;
+  animation: fadeInScale 0.6s var(--ease), borderGlow 4s ease-in-out infinite;
+  position: relative;
+  backdrop-filter: blur(10px);
+  min-width: 300px;
+}
+
+/* Corner decorations */
+.box::before, .box::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--cyan);
+  border-style: solid;
+  filter: drop-shadow(0 0 4px var(--blue));
+}
+.box::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.box::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+.box h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  letter-spacing: 4px;
+  animation: glowPulse 3s ease-in-out infinite;
+  margin-bottom: 20px;
+}
+
+/* ── INPUTS ── */
+input[type="text"], input[type="password"],
+.search-input, .link-input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px 14px;
+  width: 240px;
+  background: rgba(0,8,20,0.9);
+  border: 1px solid rgba(42,168,255,0.45);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  transition: border-color 0.35s var(--ease), box-shadow 0.35s var(--ease), background 0.35s var(--ease);
+  outline: none;
+}
+
+input[type="text"]:focus, input[type="password"]:focus,
+.search-input:focus, .link-input:focus {
+  border-color: var(--blue);
+  box-shadow: var(--glow-soft), inset 0 0 8px rgba(42,168,255,0.1);
+  background: rgba(0,15,30,0.95);
+}
+
+input::placeholder { color: rgba(122,215,255,0.4); }
+
+/* ── BUTTONS ── */
+button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  background: rgba(0,27,58,0.75);
+  border: 1px solid var(--blue);
+  color: var(--cyan);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 1px;
+  transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.15s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(42,168,255,0.18), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s var(--ease);
+}
+
+button:hover::before { transform: translateX(100%); }
+
+button:hover {
+  background: rgba(0,50,100,0.7);
+  box-shadow: var(--glow);
+  border-color: var(--cyan);
+  color: #b8e6ff;
+}
+
+button:active { transform: scale(0.97); }
+
+/* ── DESKTOP ── */
+#desktop { display: none; position: relative; z-index: 1; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 0;
+  border-bottom: 1px solid rgba(42,168,255,0.25);
+  background: rgba(0,4,15,0.7);
+  backdrop-filter: blur(12px);
+  position: relative;
+}
+
+/* Top line accent */
+.topbar::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 6s linear infinite;
+  box-shadow: 0 0 6px rgba(42,168,255,0.5);
+}
+
+/* ── LOGO ── */
+.logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  animation: glowPulse 3.5s ease-in-out infinite, logoReveal 1.2s var(--ease) forwards;
+  cursor: default;
+  padding: 4px 0 8px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tab-btn {
+  padding: 7px 16px;
+  border: 1px solid rgba(42,168,255,0.4);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  background: rgba(0,15,35,0.5);
+  color: rgba(122,215,255,0.7);
+  transition: background 0.35s var(--ease), color 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.2s var(--ease);
+  position: relative;
+  user-select: none;
+}
+
+.tab-btn::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 6px var(--blue);
+  transition: width 0.35s var(--ease), left 0.35s var(--ease);
+}
+
+.tab-btn:hover {
+  background: rgba(0,40,80,0.6);
+  color: var(--cyan);
+  box-shadow: var(--glow-soft);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.tab-btn:hover::after { width: 100%; left: 0; }
+
+.tab-btn.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,40,80,0.8);
+  box-shadow: var(--glow);
+}
+
+.tab-btn.active::after { width: 100%; left: 0; }
+
+/* ── SEARCH ── */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0 10px;
+  align-items: center;
+}
+
+.search-input {
+  width: 320px;
+  margin: 0;
+  display: inline-block;
+  font-size: 13px;
+}
+
+/* ── TAB PANELS ── */
+.tab {
+  display: none;
+  height: calc(100vh - 160px);
+  position: relative;
+}
+
+.tab.active {
+  display: flex;
+  flex-direction: column;
+  animation: tabSlideIn 0.4s var(--ease);
+}
+
+iframe {
+  width: 100%;
+  flex: 1;
+  border: none;
+}
+
+/* ── TAB TOOLBAR ── */
+.tab-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(0,4,15,0.6);
+  border-bottom: 1px solid rgba(42,168,255,0.2);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.tab-toolbar span {
+  opacity: 0.55;
+  flex: 1;
+}
+
+.icon-btn {
+  padding: 4px 10px;
+  font-size: 14px;
+  margin: 0;
+  letter-spacing: 0;
+  border-color: rgba(42,168,255,0.4);
+  color: rgba(122,215,255,0.7);
+  background: transparent;
+}
+
+.icon-btn:hover {
+  color: var(--cyan);
+  border-color: var(--blue);
+  box-shadow: var(--glow-soft);
+}
+
+/* ── FULLSCREEN OVERLAY ── */
+.tab-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  height: 100vh !important;
+  z-index: 5000 !important;
+  background: var(--bg);
+}
+
+.tab-fullscreen .tab-toolbar {
+  border-top: 1px solid var(--blue);
+  box-shadow: 0 0 12px rgba(42,168,255,0.3);
+}
+
+/* ── LINK BOX ── */
+.link-box {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(42,168,255,0.2);
+  background: rgba(0,4,15,0.5);
+  flex-wrap: wrap;
+}
+
+.link-input {
+  width: 340px;
+  margin: 0;
+  display: inline-block;
+}
+
+.link-box label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: rgba(122,215,255,0.7);
+  user-select: none;
+}
+
+/* ── UPDATES TAB ── */
+.updates-content {
+  padding: 30px;
+  max-width: 600px;
+  overflow-y: auto;
+}
+
+.updates-content h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  animation: glowPulse 3.5s ease-in-out infinite;
+  margin-bottom: 20px;
+}
+
+.update-item {
+  border-left: 2px solid rgba(42,168,255,0.4);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  background: rgba(0,20,45,0.4);
+  animation: fadeInScale 0.5s var(--ease) both;
+  transition: border-color 0.35s var(--ease), background 0.35s var(--ease), transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+
+.update-item:hover {
+  border-left-color: var(--cyan);
+  background: rgba(0,30,60,0.5);
+  transform: translateX(4px);
+  box-shadow: -2px 0 12px rgba(42,168,255,0.2);
+}
+
+.update-item:nth-child(2) { animation-delay: 0.08s; }
+.update-item:nth-child(3) { animation-delay: 0.16s; }
+.update-item:nth-child(4) { animation-delay: 0.24s; }
+.update-item:nth-child(5) { animation-delay: 0.32s; }
+.update-item:nth-child(6) { animation-delay: 0.40s; }
+
+.update-tag {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--blue);
+  margin-bottom: 4px;
+  text-shadow: 0 0 4px rgba(42,168,255,0.4);
+}
+
+.update-text { font-size: 13px; opacity: 0.85; }
+
+/* ── DASHMETRY / BROTATO LAUNCHER ── */
+.launch-btn {
+  width: 100%;
+  flex: 1;
+  font-size: 32px;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 6px;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid rgba(42,168,255,0.3);
+  background: transparent;
+  animation: glowPulse 3.5s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0;
+  transition: background 0.4s var(--ease);
+}
+
+.launch-btn:hover {
+  background: rgba(0,20,50,0.35);
+}
+
+/* ── BOOT ── */
+#boot {
+  flex-direction: column;
+  gap: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 500;
+}
+
+.boot-container {
+  width: 420px;
+  border: 1px solid rgba(42,168,255,0.4);
+  padding: 40px;
+  background: rgba(0,5,15,0.9);
+  position: relative;
+  overflow: hidden;
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+.boot-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  text-align: center;
+  animation: glowPulse 2.5s ease-in-out infinite;
+  margin-bottom: 30px;
+}
+
+.boot-step {
+  font-size: 13px;
+  letter-spacing: 1px;
+  padding: 6px 0;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: bootStep 0.4s var(--ease) forwards;
+  border-bottom: 1px solid rgba(42,168,255,0.1);
+}
+
+.boot-step .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px var(--blue);
+  transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.boot-step.done .dot { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+
+.boot-progress {
+  margin-top: 20px;
+  height: 2px;
+  background: rgba(42,168,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.boot-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  width: 0%;
+  transition: width 0.5s var(--ease);
+  box-shadow: 0 0 10px var(--blue);
+}
+
+/* ── SCAN LINE (BOOT) ── */
+.scan-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(42,168,255,0.06) 50%, transparent 60%);
+  animation: scanLine 3s linear infinite;
+  pointer-events: none;
+}
+
+/* ── GLOBAL FULLSCREEN BTN ── */
+.full-btn {
+  position: absolute;
+  top: 8px; right: 12px;
+  border: 1px solid rgba(42,168,255,0.3);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  background: transparent;
+  color: rgba(122,215,255,0.6);
+  transition: color 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
+  margin: 0;
+  z-index: 50;
+}
+.full-btn:hover { color: var(--cyan); box-shadow: var(--glow-soft); border-color: var(--blue); }
+
+/* ── STATUS BAR ── */
+.statusbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 22px;
+  background: rgba(0,4,15,0.85);
+  border-top: 1px solid rgba(42,168,255,0.2);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 20px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(122,215,255,0.5);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+
+.status-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  display: inline-block;
+  animation: statusPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 4px #00ff88; }
+  50%      { box-shadow: 0 0 10px #00ff88, 0 0 18px rgba(0,255,136,0.5); }
+}
+
+#clock { margin-left: auto; }
+
+/* ── BROTATO TAB ── */
+#brotato iframe {
+  background: #000;
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+<!-- POLICY -->
+<div id="policy">
+  <div class="box">
+    <h2>VOXTEK POLICY</h2>
+    <p style="font-size:13px; line-height:1.7; opacity:0.8; max-width:280px; margin:0 auto 20px;">
+      This is an experimental web-based OS. External content is not controlled.
+      No guarantees on stability or data persistence.
+    </p>
+    <button onclick="acceptPolicy()">▶ ACCEPT &amp; CONTINUE</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" style="display:none;">
+  <div class="box">
+    <h2>VOXTEK OS</h2>
+    <input id="user" type="text" placeholder="USERNAME">
+    <input id="pass" type="password" placeholder="PASSWORD">
+    <button onclick="loginUser(false)" style="width:100%;margin-top:14px;">▶ ENTER NORMAL</button>
+    <button onclick="loginUser(true)" style="width:100%;margin-top:6px;opacity:0.7;">⧉ ENTER ABOUT:BLANK</button>
+  </div>
+</div>
+
+<!-- BOOT -->
+<div id="boot" style="display:none;">
+  <div class="boot-container">
+    <div class="scan-sweep"></div>
+    <div class="boot-logo">VOXTEK</div>
+    <div id="bootSteps"></div>
+    <div class="boot-progress"><div class="boot-progress-bar" id="bootBar"></div></div>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+
+  <div class="topbar">
+    <div class="logo">VOXTEK</div>
+
+    <div class="tabs">
+      <div class="tab-btn" onclick="openTab('updates')" id="btn-updates">UPDATES</div>
+      <div class="tab-btn" onclick="openTab('ugs'); loadUGS()" id="btn-ugs">UGS</div>
+      <div class="tab-btn" onclick="openTab('gn'); loadGN()" id="btn-gn">GN-MATH</div>
+      <div class="tab-btn" onclick="openTab('brotato'); loadBrotato()" id="btn-brotato">BROTATO</div>
+      <div class="tab-btn" onclick="openTab('links')" id="btn-links">LINKS</div>
+      <div class="tab-btn" onclick="openTab('dashmetry')" id="btn-dashmetry">DASHMETRY</div>
+    </div>
+
+    <div class="search-bar">
+      <input id="searchInput" class="search-input" placeholder="Search VOXTEK Web...">
+      <button onclick="doSearch()">⌕ SEARCH</button>
+    </div>
+  </div>
+
+  <button class="full-btn" onclick="toggleFull()" title="Fullscreen OS">⛶</button>
+
+  <!-- UPDATES TAB -->
+  <div id="updates" class="tab">
+    <div class="tab-toolbar">
+      <span>SYSTEM / UPDATES</span>
+      <button class="icon-btn" onclick="toggleTabFS('updates')" title="Fullscreen tab">⛶</button>
+    </div>
+    <div class="updates-content">
+      <h2>VOXTEK OS v3.2</h2>
+      <div class="update-item">
+        <div class="update-tag">NEW · v3.2</div>
+        <div class="update-text">Brotato game module added — full Godot engine integration</div>
+      </div>
+      <div class="update-item">
+        <div class="update-tag">IMPROVED · v3.2</div>
+        <div class="update-text">Smoother animation curves using cubic-bezier easing across all transitions</div>
+      </div>
+      <div class="update-item">
+        <div class="update-tag">IMPROVED · v3.2</div>
+        <div class="update-text">Refined glow aesthetics — softer, layered, less aggressive</div>
+      </div>
+      <div class="update-item">
+        <div class="update-tag">NEW · v3.1</div>
+        <div class="update-text">Per-tab fullscreen mode — maximize any panel independently</div>
+      </div>
+      <div class="update-item">
+        <div class="update-tag">NEW · v3.1</div>
+        <div class="update-text">Floating particle system &amp; scanline overlay</div>
+      </div>
+      <div class="update-item">
+        <div class="update-tag">IMPROVED · v3.1</div>
+        <div class="update-text">Boot sequence now shows step-by-step progress indicator</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UGS TAB -->
+  <div id="ugs" class="tab">
+    <div class="tab-toolbar">
+      <span id="ugsStatus">UGS / READY</span>
+      <button class="icon-btn" onclick="toggleTabFS('ugs')" title="Fullscreen tab">⛶</button>
+      <button class="icon-btn" onclick="loadUGS(true)" title="Reload">↺</button>
+    </div>
+    <iframe id="ugsFrame"></iframe>
+  </div>
+
+  <!-- GN-MATH TAB -->
+  <div id="gn" class="tab">
+    <div class="tab-toolbar">
+      <span>GN-MATH / ACTIVE</span>
+      <button class="icon-btn" onclick="toggleTabFS('gn')" title="Fullscreen tab">⛶</button>
+      <button class="icon-btn" onclick="loadGN(true)" title="Reload">↺</button>
+    </div>
+    <iframe id="gnFrame"></iframe>
+  </div>
+
+  <!-- BROTATO TAB -->
+  <div id="brotato" class="tab">
+    <div class="tab-toolbar">
+      <span id="brotatoStatus">BROTATO / READY</span>
+      <button class="icon-btn" onclick="toggleTabFS('brotato')" title="Fullscreen tab">⛶</button>
+      <button class="icon-btn" onclick="loadBrotato(true)" title="Reload">↺</button>
+    </div>
+    <iframe id="brotatoFrame" allow="autoplay; gamepad; cross-origin-isolated" allowfullscreen></iframe>
+  </div>
+
+  <!-- LINKS TAB -->
+  <div id="links" class="tab">
+    <div class="tab-toolbar">
+      <span>LINKS / BROWSER</span>
+      <button class="icon-btn" onclick="toggleTabFS('links')" title="Fullscreen tab">⛶</button>
+    </div>
+    <div class="link-box">
+      <input id="linkInput" class="link-input" placeholder="Enter URL...">
+      <label>
+        <input type="checkbox" id="blankToggle">
+        about:blank
+      </label>
+      <button onclick="launchLink()">▶ ACCESS</button>
+    </div>
+    <iframe id="linkFrame"></iframe>
+  </div>
+
+  <!-- DASHMETRY TAB -->
+  <div id="dashmetry" class="tab">
+    <div class="tab-toolbar">
+      <span>DASHMETRY / EXTERNAL</span>
+      <button class="icon-btn" onclick="toggleTabFS('dashmetry')" title="Fullscreen tab">⛶</button>
+    </div>
+    <button class="launch-btn" onclick="openDash()">⬡ LAUNCH DASHMETRY</button>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <span class="status-dot"></span>
+    <span>VOXTEK OS v3.2</span>
+    <span>SYS NOMINAL</span>
+    <span id="clock"></span>
+  </div>
+
+</div>
+
+<script>
+/* ── USERS ── */
+const users = { "Vox": "fnafbrolol", "doGS": "dogsrcool1234" };
+
+/* ── PARTICLES ── */
+(function spawnParticles(){
+  const container = document.getElementById("particles");
+  for(let i = 0; i < 35; i++){
+    const p = document.createElement("div");
+    p.className = "particle";
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      width: ${Math.random() > 0.7 ? 3 : 2}px;
+      height: ${Math.random() > 0.7 ? 3 : 2}px;
+      animation-duration: ${8 + Math.random()*16}s;
+      animation-delay: ${-Math.random()*22}s;
+      opacity: ${0.3 + Math.random()*0.5};
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ── CLOCK ── */
+function updateClock(){
+  const now = new Date();
+  document.getElementById("clock").textContent =
+    now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── POLICY ── */
+window.onload = () => {
+  if(localStorage.getItem("policyAccepted")){
+    document.getElementById("policy").style.display = "none";
+    document.getElementById("login").style.display = "flex";
+  }
+};
+
+function acceptPolicy(){
+  const el = document.getElementById("policy");
+  el.style.opacity = "0";
+  localStorage.setItem("policyAccepted","true");
+  setTimeout(()=>{
+    el.style.display = "none";
+    document.getElementById("login").style.display = "flex";
+  }, 500);
+}
+
+/* ── LOGIN ── */
+function loginUser(useBlank){
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
+
+  if(users[u] && users[u] === p){
+    if(useBlank){
+      const win = window.open("about:blank","_blank");
+      win.document.write(document.documentElement.outerHTML);
+      return;
+    }
+
+    document.getElementById("login").style.display = "none";
+    runBoot();
+  } else {
+    const box = document.querySelector("#login .box");
+    box.style.animation = "none";
+    box.style.borderColor = "#ff4466";
+    box.style.boxShadow = "0 0 20px rgba(255,50,80,0.4)";
+    setTimeout(()=>{
+      box.style.borderColor = "";
+      box.style.boxShadow = "";
+      box.style.animation = "";
+    }, 1000);
+  }
+}
+
+/* ── BOOT SEQUENCE ── */
+function runBoot(){
+  const boot = document.getElementById("boot");
+  boot.style.display = "flex";
+
+  const steps = [
+    "Initializing VOXTEK kernel...",
+    "Loading interface modules...",
+    "Connecting secure channels...",
+    "Mounting filesystem layers...",
+    "Launching VOXTEK OS..."
+  ];
+
+  const stepsEl = document.getElementById("bootSteps");
+  const bar = document.getElementById("bootBar");
+  let i = 0;
+
+  function nextStep(){
+    if(i >= steps.length){
+      setTimeout(()=>{
+        bar.style.width = "100%";
+        const last = stepsEl.querySelector(".boot-step:last-child");
+        if(last) last.classList.add("done");
+        setTimeout(()=>{
+          boot.style.display = "none";
+          document.getElementById("desktop").style.display = "block";
+          openTab("updates");
+        }, 600);
+      }, 300);
+      return;
+    }
+
+    const prev = stepsEl.querySelector(".boot-step:last-child");
+    if(prev) prev.classList.add("done");
+
+    const div = document.createElement("div");
+    div.className = "boot-step";
+    div.innerHTML = `<span class="dot"></span>${steps[i]}`;
+    stepsEl.appendChild(div);
+
+    bar.style.width = ((i+1)/steps.length*100) + "%";
+    i++;
+    setTimeout(nextStep, 540);
+  }
+
+  setTimeout(nextStep, 300);
+}
+
+/* ── SEARCH ── */
+function doSearch(){
+  const q = document.getElementById("searchInput").value.trim();
+  if(!q) return;
+  const url = "https://duckduckgo.com/?q=" + encodeURIComponent(q);
+  const win = window.open("about:blank","_blank");
+  win.document.write(`<iframe src="${url}" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>`);
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  const s = document.getElementById("searchInput");
+  if(s) s.addEventListener("keydown", e=>{ if(e.key==="Enter") doSearch(); });
+
+  const l = document.getElementById("linkInput");
+  if(l) l.addEventListener("keydown", e=>{ if(e.key==="Enter") launchLink(); });
+});
+
+/* ── TABS ── */
+function openTab(id){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  const btn = document.getElementById("btn-"+id);
+  if(btn) btn.classList.add("active");
+}
+
+/* ── TAB FULLSCREEN ── */
+function toggleTabFS(id){
+  const tab = document.getElementById(id);
+  tab.classList.toggle("tab-fullscreen");
+}
+
+/* ── LOADERS ── */
+let ugsLoaded = false;
+function loadUGS(force){
+  if(ugsLoaded && !force) return;
+  ugsLoaded = true;
+  document.getElementById("ugsStatus").textContent = "UGS / LOADING...";
+  document.getElementById("ugsFrame").srcdoc = "<body style='background:#00040a;color:#7ad7ff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:14px;letter-spacing:2px;'>LOADING UGS...</body>";
+  fetch('https://cdn.jsdelivr.net/gh/bubbls/ugs-singlefile@main/AASINGLEFILE.html')
+    .then(r=>r.text())
+    .then(html=>{
+      document.getElementById("ugsFrame").srcdoc = html;
+      document.getElementById("ugsStatus").textContent = "UGS / ACTIVE";
+    })
+    .catch(()=>{ document.getElementById("ugsStatus").textContent = "UGS / ERROR"; ugsLoaded = false; });
+}
+
+let gnLoaded = false;
+function loadGN(force){
+  if(gnLoaded && !force) return;
+  gnLoaded = true;
+  document.getElementById("gnFrame").src = "https://es-d-7109424020260414-019d8016-445c-7bd5-aaae-8f29889eb91a.codepen.dev/";
+}
+
+/* ── BROTATO LOADER ── */
+const BROTATO_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Brotato</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+#canvas { display: block; width: 100vw !important; height: 100vh !important; position: fixed; top: 0; left: 0; border: none; outline: none; object-fit: fill; }
+#status {
+    position: absolute; top: 30px; left: 0; width: 100%; z-index: 10; text-align: center;
+    font-family: 'Orbitron', sans-serif; font-size: 22px; letter-spacing: 3px;
+    background: linear-gradient(to right, #500, #550, #050, #055, #005, #505, #500);
+    background-size: 200% auto; color: transparent;
+    -webkit-background-clip: text; background-clip: text;
+    animation: rainbow 3s linear infinite; pointer-events: none;
+    text-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+#status i { margin-right: 15px; }
+@keyframes rainbow { to { background-position: 200% center; } }
+</style>
+<script src="https://cdn.jsdelivr.net/gh/gzuidhof/coi-serviceworker@latest/coi-serviceworker.min.js"></` + `script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="status"><i class="fas fa-compact-disc fa-spin"></i> LOADING: 0.00 / 163.00 MB</div>
+<script>
+(function() {
+'use strict';
+const HASH = "49e46a50c1dbf11f78c7c9ee2659218d534ace63";
+const BASE = \`https://cdn.jsdelivr.net/gh/shayderrr/newports@\${HASH}/\`;
+const TOTAL_MB = "163.00";
+const originalFetch = window.fetch;
+const mergedData = {};
+const pendingRequests = {};
+let bytesLoadedSoFar = 0;
+const statusEl = document.getElementById('status');
+function updateStatus(currentBytes) {
+    const currentMB = (currentBytes / 1048576).toFixed(2);
+    statusEl.innerHTML = \`<i class="fas fa-sync-alt fa-spin"></i> LOADING: \${currentMB} / \${TOTAL_MB} MB\`;
+}
+window.fetch = function(url, ...args) {
+    const u = url.toString();
+    if (u.includes("index.pck") || u.includes("index.wasm")) {
+        const f = u.includes(".pck") ? "index.pck" : "index.wasm";
+        if (mergedData[f]) return Promise.resolve(new Response(mergedData[f]));
+        return new Promise((resolve) => {
+            if (!pendingRequests[f]) pendingRequests[f] = [];
+            pendingRequests[f].push(resolve);
+        });
+    }
+    return originalFetch(url, ...args);
+};
+async function merge(name, start, end) {
+    const bufs = [];
+    for (let i = start; i <= end; i++) {
+        const url = BASE + encodeURIComponent(name + ".part" + i);
+        const r = await originalFetch(url);
+        if (!r.ok) throw new Error();
+        const data = await r.arrayBuffer();
+        bufs.push(data);
+        bytesLoadedSoFar += data.byteLength;
+        updateStatus(bytesLoadedSoFar);
+    }
+    const b = new Blob(bufs, { type: 'application/octet-stream' });
+    mergedData[name] = b;
+    if (pendingRequests[name]) {
+        pendingRequests[name].forEach(res => res(new Response(b)));
+        delete pendingRequests[name];
+    }
+}
+async function init() {
+    try {
+        await merge("index.pck", 1, 8);
+        await merge("index.wasm", 1, 2);
+        const s = document.createElement('script');
+        s.src = BASE + "index.js";
+        s.onload = () => {
+            const engine = new Engine({
+                "args":[],"canvasResizePolicy":2,"executable":"index","fileSizes":{"index.pck":144746880,"index.wasm":26156492},"focusCanvas":true
+            });
+            engine.startGame({
+                onProgress: (current, total) => { if (total > 0) { updateStatus(bytesLoadedSoFar); } }
+            }).then(() => {
+                statusEl.style.display = 'none';
+                window.dispatchEvent(new Event('resize'));
+            });
+        };
+        document.body.appendChild(s);
+    } catch (e) {
+        statusEl.innerHTML = \`<i class="fas fa-exclamation-triangle"></i> LOAD ERROR\`;
+    }
+}
+init();
+})();
+</` + `script>
+</body>
+</html>`;
+
+let brotatoLoaded = false;
+function loadBrotato(force){
+  if(brotatoLoaded && !force) return;
+  brotatoLoaded = true;
+  const frame = document.getElementById("brotatoFrame");
+  document.getElementById("brotatoStatus").textContent = "BROTATO / LOADING ENGINE...";
+  frame.srcdoc = BROTATO_HTML;
+  frame.onload = () => {
+    document.getElementById("brotatoStatus").textContent = "BROTATO / RUNNING";
+  };
+}
+
+// Brotato auto-loads via its tab button onclick handler
+
+/* ── LINKS ── */
+function launchLink(){
+  let url = document.getElementById("linkInput").value.trim();
+  if(!url) return;
+  if(!url.startsWith("http")) url = "https://" + url;
+
+  if(document.getElementById("blankToggle").checked){
+    const win = window.open("about:blank","_blank");
+    win.document.write(`<iframe src="${url}" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>`);
+  } else {
+    document.getElementById("linkFrame").src = url;
+  }
+}
+
+/* ── DASHMETRY ── */
+function openDash(){
+  const win = window.open("about:blank","_blank");
+  win.document.write(`<iframe src="https://dashmetry.com" style="position:fixed;inset:0;width:100%;height:100%;border:none;"></iframe>`);
+}
+
+/* ── OS FULLSCREEN ── */
+function toggleFull(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+</script>
+</body>
+</html>
