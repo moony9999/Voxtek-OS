@@ -39,7 +39,41 @@ html, body {
   height: 100vh;
   width: 100vw;
 }
+   /* ── HTML Upload System ── */
+
 button { cursor: var(--cursor); }
+   const HTMLUpload = {
+  currentHTML: null,
+  handleFile(file) {
+    if (!file || !file.name.match(/\.(html|htm)$/i)) {
+      Toast.show('INVALID FILE TYPE');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      this.currentHTML = e.target.result;
+      document.getElementById('htmlUploadZone').style.display = 'none';
+      document.getElementById('htmlPreview').classList.add('active');
+      const iframe = document.getElementById('htmlPreviewFrame');
+      iframe.srcdoc = this.currentHTML;
+      Toast.show('HTML LOADED');
+    };
+    reader.readAsText(file);
+  },
+  openInBlank() {
+    if (!this.currentHTML) return;
+    const w = window.open('about:blank', '_blank');
+    w.document.write(this.currentHTML);
+    w.document.close();
+    Toast.show('OPENED IN NEW TAB');
+  },
+  reset() {
+    this.currentHTML = null;
+    document.getElementById('htmlUploadZone').style.display = 'flex';
+    document.getElementById('htmlPreview').classList.remove('active');
+    document.getElementById('htmlFileInput').value = '';
+  }
+};
 
 /* ═══════════════════════════════════════════
    BACKGROUND SYSTEM
